@@ -57,7 +57,7 @@ def list_available_models():
 def llamar_gemini_directo(prompt, api_key):
     # INTENTO 1: Probamos con 'gemini-pro' (El más estándar y viejo confiable)
     # Si este falla, tú cambiarás este nombre por el que salga en /api/models
-    //MODEL_NAME = "gemini-2.5-flash" 
+    #MODEL_NAME = "gemini-2.5-flash" 
     MODEL_NAME = "gemini-flash-latest"
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={api_key}"
@@ -98,4 +98,5 @@ async def chat_endpoint(user_input: UserMessage):
 
 @app.get("/")
 def read_root():
+
     return {"status": "Mayan Concierge Diagnóstico Activo 🗿"}
