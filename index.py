@@ -85,7 +85,7 @@ def buscar_lugares_relevantes(query: str, places: List[dict]):
 
 def llamar_gemini(prompt: str, api_key: str):
     # Usamos el alias estable
-    model = "gemini-flash-latest"
+    model = "gemini-1.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     
     headers = {'Content-Type': 'application/json'}
@@ -145,3 +145,4 @@ async def chat_endpoint(user_input: UserMessage):
 def health_check():
     db = cargar_places_db()
     return {"status": "Online", "lugares_en_db": len(db)}
+
