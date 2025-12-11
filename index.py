@@ -1,22 +1,20 @@
 import os
 import json
 import requests
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import FastAPI
+from pydantic import BaseModel
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from functools import lru_cache
 import logging
 
-# Configuración de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- CORRECCIÓN 1: RUTA RELATIVA SIMPLE ---
-# Como index.py está en la raíz, la carpeta actual es la base
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-app = FastAPI(title="Mayan Concierge API", version="2.2")
+app = FastAPI(title="Mayan Concierge API", version="3.0-Fallback")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,9 +24,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Render inyecta la variable automáticamente, no necesitamos cargar .env aquí si falla
-GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 class UserMessage(BaseModel):
     message: str
     history: List[str] = []
@@ -37,28 +32,20 @@ class ChatResponse(BaseModel):
     response: str
     recommended_places: List[dict]
 
-# --- CORRECCIÓN 2: CARGA DE DATOS ROBUSTA ---
 @lru_cache(maxsize=1)
 def cargar_places_db():
-    # Buscamos 'data/places.json' desde la raíz
     json_path = os.path.join(BASE_DIR, 'data', 'places.json')
     try:
         if not os.path.exists(json_path):
-            logger.error(f"❌ NO ENCUENTRO EL ARCHIVO: {json_path}")
-            # Intento de respaldo por si la estructura es distinta
             return []
-        
         with open(json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            logger.info(f"✅ DB Cargada: {len(data)} lugares.")
-            return data
-    except Exception as e:
-        logger.error(f"❌ Error DB: {e}")
+            return json.load(f)
+    except Exception:
         return []
 
 def buscar_lugares_relevantes(query: str, places: List[dict]):
     if not places:
-        return [], "AVISO: La base de datos está vacía. No puedo recomendar nada específico."
+        return [], "AVISO: Base de datos vacía."
     
     query = query.lower()
     keywords = query.split()
@@ -66,75 +53,75 @@ def buscar_lugares_relevantes(query: str, places: List[dict]):
     
     for place in places:
         score = 0
-        # Convertimos todo el lugar a texto para buscar
         full_text = str(place).lower()
-        
         for word in keywords:
             if len(word) > 3 and word in full_text:
                 score += 1
-                
         if score > 0:
             scored_places.append((score, place))
             
-    # Ordenamos por score
     scored_places.sort(key=lambda x: x[0], reverse=True)
-    results = [p[1] for p in scored_places[:4]] # Top 4
-    
-    context = json.dumps(results, ensure_ascii=False) if results else "No encontré coincidencias exactas."
+    results = [p[1] for p in scored_places[:4]]
+    context = json.dumps(results, ensure_ascii=False) if results else "No encontré coincidencias."
     return results, context
 
-def llamar_gemini(prompt: str, api_key: str):
-    # Usamos el alias estable
-    model = "gemini-2.0-flash"
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+# --- LA MAGIA: INTENTA VARIOS MODELOS HASTA QUE UNO FUNCIONE ---
+def llamar_gemini_robusto(prompt: str, api_key: str):
+    # Lista de modelos ordenada por prioridad (del más probable al menos probable)
+    # Basado en la lista que tu cuenta mostró disponible
+    MODELS_TO_TRY = [
+        "gemini-flash-latest",    # Intento 1: El alias oficial
+        "gemini-1.5-flash",       # Intento 2: El estándar
+        "gemini-pro",             # Intento 3: El clásico (suele tener buena cuota)
+        "gemini-2.0-flash-exp",   # Intento 4: Experimental
+        "gemini-1.5-pro-latest"   # Intento 5: Último recurso
+    ]
     
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.7,
-            # --- CORRECCIÓN 3: MÁS ESPACIO PARA HABLAR ---
-            "maxOutputTokens": 800, 
-            "topP": 0.9
+    last_error = ""
+
+    for model in MODELS_TO_TRY:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        headers = {'Content-Type': 'application/json'}
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": 400}
         }
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=payload, params={"key": api_key})
         
-        if response.status_code != 200:
-            return f"Error IA ({response.status_code}): {response.text}"
+        try:
+            logger.info(f"🔄 Intentando con modelo: {model}...")
+            response = requests.post(url, headers=headers, json=payload, params={"key": api_key})
             
-        data = response.json()
-        return data['candidates'][0]['content']['parts'][0]['text']
-    except Exception as e:
-        return f"Error de conexión: {str(e)}"
+            # Si funciona (200), rompemos el ciclo y regresamos el texto
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"✅ ÉXITO con modelo: {model}")
+                return data['candidates'][0]['content']['parts'][0]['text']
+            
+            # Si falla, guardamos el error y seguimos al siguiente modelo
+            error_msg = response.text
+            last_error = f"{model} falló ({response.status_code})"
+            logger.warning(f"⚠️ Falló {model}: {error_msg}")
+            
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    # Si llegamos aquí, fallaron TODOS los modelos
+    return f"Lo siento, la selva está muy densa hoy. (Error técnico: {last_error})"
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(user_input: UserMessage):
     places_db = cargar_places_db()
-    
-    # Búsqueda
     relevant, context = buscar_lugares_relevantes(user_input.message, places_db)
     
-    # Prompt
     system_instruction = f"""
-    Eres 'Mayan Concierge', guía de Tenosique, Tabasco.
-    
-    INFORMACIÓN ENCONTRADA:
-    {context}
-    
-    INSTRUCCIONES:
-    1. Si hay lugares en la lista de arriba, recomiéndalos con entusiasmo.
-    2. Si la lista está vacía o dice "No encontré", sugiere visitar el Cañón del Usumacinta o el Centro.
-    3. Sé amable y usa emojis 🌴.
-    4. NO digas "según mis datos", actúa natural.
-    
+    Eres 'Mayan Concierge', guía de Tenosique.
+    DATOS: {context}
     Usuario: "{user_input.message}"
-    Respuesta:
+    Responde breve y amable con emojis 🌴. Si no hay datos, sugiere el Cañón.
     """
 
-    ai_text = llamar_gemini(system_instruction, GENAI_API_KEY)
+    ai_text = llamar_gemini_robusto(system_instruction, GENAI_API_KEY)
 
     return ChatResponse(
         response=ai_text,
@@ -143,7 +130,4 @@ async def chat_endpoint(user_input: UserMessage):
 
 @app.get("/")
 def health_check():
-    db = cargar_places_db()
-    return {"status": "Online", "lugares_en_db": len(db)}
-
-
+    return {"status": "Mayan Concierge Online 3.0"}
