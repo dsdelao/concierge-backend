@@ -3,210 +3,150 @@
     "id": "antojitos-mary",
     "nombre": "Antojitos Mary",
     "categoria": "Gastronomía",
-    "tags": [
-      "desayuno",
-      "antojitos",
-      "economico",
-      "familiar",
-      "rapido"
-    ],
+    "tags": ["desayuno", "antojitos", "economico", "familiar", "rapido", "comida"],
     "precio_promedio": "$ - Económico (60-120 MXN)",
     "horario": "07:00 - 12:00",
     "vibe": "Casero, tradicional, ambiente familiar.",
-    "ubicacion_texto": "Calle Independencia, frente a la primaria Benito Juárez, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/antojo123",
+    "ubicacion_texto": "Calle Independencia, frente a la primaria Benito Juárez.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9345567789",
     "tip_secreto": "Las empanadas de chaya son las más pedidas.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/antojitos-mary.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1564758564527-b97d79cb27c1?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "heladeria-frio-rio",
     "nombre": "Heladería Frío Río",
     "categoria": "Gastronomía",
-    "tags": [
-      "postres",
-      "helados",
-      "tarde",
-      "familia",
-      "climatizado"
-    ],
+    "tags": ["postres", "helados", "tarde", "familia", "climatizado"],
     "precio_promedio": "$ - Económico (40-90 MXN)",
     "horario": "12:00 - 21:00",
     "vibe": "Dulce, colorido, ideal para fotos.",
     "ubicacion_texto": "Malecón nuevo de Tenosique, frente al mural del jaguar.",
-    "google_maps": "https://maps.app.goo.gl/helado456",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9342211900",
     "tip_secreto": "El helado de cacao con chile es edición local.",
     "promo_activa": "20% en combos los domingos.",
-    "imagen_url": "/assets/img/frio-rio.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1560008581-09826d1de69e?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "mirador-boca-cerro",
     "nombre": "Mirador Boca del Cerro",
     "categoria": "Aventura",
-    "tags": [
-      "mirador",
-      "fotos",
-      "naturaleza",
-      "amanecer",
-      "romantico"
-    ],
+    "tags": ["mirador", "fotos", "naturaleza", "amanecer", "romantico", "vista"],
     "precio_promedio": "Gratis",
     "horario": "Abierto 24 horas",
     "vibe": "Tranquilo, panorámico, aire fresco.",
-    "ubicacion_texto": "Entrada del puente de Boca del Cerro, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/mirador999",
+    "ubicacion_texto": "Entrada del puente de Boca del Cerro.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "N/A",
     "tip_secreto": "El mejor amanecer es a las 6:20 am.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/mirador-cerro.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "cafe-monte-alto",
     "nombre": "Café Monte Alto",
     "categoria": "Gastronomía",
-    "tags": [
-      "café",
-      "wifi",
-      "trabajo",
-      "tranquilo",
-      "terraza"
-    ],
+    "tags": ["café", "wifi", "trabajo", "tranquilo", "terraza", "beber"],
     "precio_promedio": "$$ - Medio (80-160 MXN)",
     "horario": "08:00 - 22:00",
     "vibe": "Moderno, aroma a café, relajado.",
-    "ubicacion_texto": "A un costado del parque central de Tenosique, esquina con Reforma.",
-    "google_maps": "https://maps.app.goo.gl/cafe321",
+    "ubicacion_texto": "A un costado del parque central, esquina Reforma.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9349901122",
     "tip_secreto": "El capuchino con cacao local es la joya del menú.",
     "promo_activa": "Café americano gratis con pan artesanal (mañanas).",
-    "imagen_url": "/assets/img/monte-alto.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "kayak-rios-maya",
     "nombre": "Kayak Ríos Maya",
     "categoria": "Aventura",
-    "tags": [
-      "kayak",
-      "naturaleza",
-      "rio",
-      "deporte",
-      "calor"
-    ],
+    "tags": ["kayak", "naturaleza", "rio", "deporte", "calor", "agua"],
     "precio_promedio": "$$ - Medio (200-350 MXN p/p)",
     "horario": "06:00 - 17:00",
     "vibe": "Energético, fresco, contacto total con el río.",
-    "ubicacion_texto": "Embarcadero turístico en Boca del Cerro, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/kayak555",
+    "ubicacion_texto": "Embarcadero turístico en Boca del Cerro.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9346672012",
-    "tip_secreto": "Pregunta por el recorrido 'Mareas Suaves', ideal para principiantes.",
+    "tip_secreto": "Pregunta por el recorrido 'Mareas Suaves' para principiantes.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/kayak-maya.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1544551763-46a875657f3f?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "mercado-artesanal-rio-bajo",
-    "nombre": "Mercado Artesanal Río Bajo",
+    "nombre": "Mercado Artesanal",
     "categoria": "Compras",
-    "tags": [
-      "artesanias",
-      "mercado",
-      "local",
-      "souvenirs",
-      "colores"
-    ],
+    "tags": ["artesanias", "mercado", "local", "souvenirs", "colores", "regalos"],
     "precio_promedio": "$ - Económico (40-250 MXN)",
     "horario": "09:00 - 19:00",
     "vibe": "Cultural, colorido, lleno de vida.",
     "ubicacion_texto": "Mercado viejo de Tenosique, entrada principal.",
-    "google_maps": "https://maps.app.goo.gl/artesanias008",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9341120021",
     "tip_secreto": "Las máscaras talladas de cedro se agotan rápido.",
     "promo_activa": "10% mostrando 'Mayan Concierge'.",
-    "imagen_url": "/assets/img/mercado-rio-bajo.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1533158388470-9a56699990c6?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "casa-cultural-tenosique",
     "nombre": "Casa Cultural Tenosique",
     "categoria": "Cultura",
-    "tags": [
-      "cultura",
-      "arte",
-      "galeria",
-      "talleres",
-      "musica"
-    ],
+    "tags": ["cultura", "arte", "galeria", "talleres", "musica", "museo"],
     "precio_promedio": "$ - Donativo voluntario",
     "horario": "10:00 - 19:00",
     "vibe": "Artístico, creativo, ambiente relajado.",
-    "ubicacion_texto": "Calle Hidalgo, frente a la capilla antigua, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/cultura777",
+    "ubicacion_texto": "Calle Hidalgo, frente a la capilla antigua.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9348874321",
     "tip_secreto": "Los viernes hay música viva sin costo.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/casa-cultural.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1560173660-8488e02d8f78?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "parque-ecologico-la-ceiba",
     "nombre": "Parque Ecológico La Ceiba",
     "categoria": "Naturaleza",
-    "tags": [
-      "senderismo",
-      "naturaleza",
-      "arboles",
-      "familia",
-      "sombras"
-    ],
+    "tags": ["senderismo", "naturaleza", "arboles", "familia", "sombras", "caminar"],
     "precio_promedio": "Gratis",
     "horario": "06:00 - 20:00",
     "vibe": "Natural, fresco, perfecto para caminar.",
     "ubicacion_texto": "Carretera Tenosique – Boca del Cerro.",
-    "google_maps": "https://maps.app.goo.gl/ceiba123",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "N/A",
     "tip_secreto": "Hay una ceiba gigante escondida detrás del tercer sendero.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/ceiba.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "mariscos-el-manglar",
     "nombre": "Mariscos El Manglar",
     "categoria": "Gastronomía",
-    "tags": [
-      "mariscos",
-      "almuerzo",
-      "rio",
-      "fresco",
-      "familiar"
-    ],
+    "tags": ["mariscos", "almuerzo", "rio", "fresco", "familiar", "pescado"],
     "precio_promedio": "$$ - Medio (150-280 MXN)",
     "horario": "11:00 - 19:00",
     "vibe": "Fresco del río, ambiente relajado, comida casera.",
-    "ubicacion_texto": "Salida rumbo a La Palma, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/manglar444",
+    "ubicacion_texto": "Salida rumbo a La Palma.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9343347621",
     "tip_secreto": "La mojarra frita estilo 'Manglar' es lo más pedido.",
     "promo_activa": "Refresco gratis en consumo mayor a 200 MXN.",
-    "imagen_url": "/assets/img/manglar.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1599354607476-8868625977fb?auto=format&fit=crop&w=500&q=80"
   },
   {
     "id": "tirolesa-selva-viva",
     "nombre": "Tirolesa Selva Viva",
     "categoria": "Aventura",
-    "tags": [
-      "tirolesa",
-      "adrenalina",
-      "familia",
-      "naturaleza",
-      "vista"
-    ],
+    "tags": ["tirolesa", "adrenalina", "familia", "naturaleza", "vista"],
     "precio_promedio": "$$$ - Aventura (350-600 MXN)",
     "horario": "09:00 - 18:00",
     "vibe": "Emocionante, panorámico, lleno de adrenalina.",
-    "ubicacion_texto": "Zona ecoturística Selva Viva, Tenosique.",
-    "google_maps": "https://maps.app.goo.gl/selvaviva800",
+    "ubicacion_texto": "Zona ecoturística Selva Viva.",
+    "google_maps": "https://goo.gl/maps/placeholder",
     "telefono": "9347712300",
     "tip_secreto": "La tirolesa doble es perfecta para fotos épicas.",
     "promo_activa": null,
-    "imagen_url": "/assets/img/tirolesa.webp"
+    "imagen_url": "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?auto=format&fit=crop&w=500&q=80"
   }
 ]
