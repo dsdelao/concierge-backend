@@ -210,7 +210,7 @@ def buscar_lugares_relevantes(
 def llamar_gemini(
     prompt: str, 
     api_key: str, 
-    model: str = "gemini-1.5-flash"
+    model: str = "gemini-flash-latest"
 ) -> tuple:
     """
     Llama a Gemini con manejo robusto de errores.
@@ -517,3 +517,4 @@ async def global_exception_handler(request, exc):
         "error": "Error interno del servidor",
         "detail": str(exc)
     }
+
