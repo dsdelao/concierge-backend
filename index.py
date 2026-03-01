@@ -133,8 +133,6 @@ def obtener_resenas_recientes(negocio_id: str, limite: int = 5) -> list:
 # ============================================================
 
 def llamar_gemini(prompt: str, api_key: str) -> str:
-    #model = "gemini-flash-latest"
-    #url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     model = "gemini-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     payload = {
@@ -228,3 +226,14 @@ async def guardar_resena(resena: NuevaResena):
 def health_check():
     places = supabase_get("negocios", params={"aprobado": "eq.true", "select": "id"})
     return {"status": "Online", "version": "2.0", "negocios_activos": len(places)}
+
+@app.get("/debug")
+def debug_env():
+    """Endpoint temporal para verificar variables de entorno en Render."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_ANON_KEY")
+    return {
+        "SUPABASE_URL":      url if url else "NO ENCONTRADA",
+        "SUPABASE_ANON_KEY": f"{key[:10]}..." if key else "NO ENCONTRADA",
+        "GEMINI_API_KEY":    "OK" if os.getenv("GEMINI_API_KEY") else "NO ENCONTRADA",
+    }
