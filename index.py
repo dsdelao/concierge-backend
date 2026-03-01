@@ -31,7 +31,7 @@ app.add_middleware(
 # ============================================================
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
 SUPABASE_URL  = os.getenv("https://kixzeoduohupvyapbssd.supabase.co")      # ej: https://xxxx.supabase.co
-SUPABASE_KEY  = os.getenv("sb_publishable_V4AT_i4Hrd9W7h4bXkOWug_yh-ZnlfH") # la anon/public key
+SUPABASE_KEY  = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpeHplb2R1b2h1cHZ5YXBic3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNDM1MjgsImV4cCI6MjA4NzkxOTUyOH0.FRKTo3Jx-B9aqE5AjI13SR67uEuR2Ih9DGNbVvBgyKA") # la anon/public key
 
 
 # ============================================================
