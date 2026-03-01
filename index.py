@@ -95,7 +95,7 @@ class NuevaResena(BaseModel):
 # ============================================================
 
 def buscar_lugares_relevantes(query: str):
-    places = supabase_get("negocios", params={"aprobado": "eq.true", "select": "*"})
+    places = supabase_get("negocios", params={"aprobado": "is.true", "select": "*"})
 
     if not places:
         return [], "AVISO: La base de datos esta vacia."
@@ -204,7 +204,7 @@ Respuesta:
 async def guardar_resena(resena: NuevaResena):
     check = supabase_get("negocios", params={
         "id":       f"eq.{resena.negocio_id}",
-        "aprobado": "eq.true",
+        "aprobado": "is.true",
         "select":   "id"
     })
     if not check:
@@ -224,7 +224,7 @@ async def guardar_resena(resena: NuevaResena):
 
 @app.get("/")
 def health_check():
-    places = supabase_get("negocios", params={"aprobado": "eq.true", "select": "id"})
+    places = supabase_get("negocios", params={"aprobado": "is.true", "select": "id"})
     return {"status": "Online", "version": "2.0", "negocios_activos": len(places)}
 
 @app.get("/debug")
