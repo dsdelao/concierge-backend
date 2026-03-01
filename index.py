@@ -1,3 +1,9 @@
+"""
+index.py — Mayan Concierge API v2.0
+Sin SDK de Supabase. Usa la API REST directamente con 'requests'.
+Cero dependencias nuevas respecto a la v1.
+"""
+
 import os
 import json
 import requests
@@ -5,29 +11,69 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
-from functools import lru_cache
 import logging
 
-# Configuración de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- CORRECCIÓN 1: RUTA RELATIVA SIMPLE ---
-# Como index.py está en la raíz, la carpeta actual es la base
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-app = FastAPI(title="Mayan Concierge API", version="2.2")
+app = FastAPI(title="Mayan Concierge API", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Render inyecta la variable automáticamente, no necesitamos cargar .env aquí si falla
+# ============================================================
+# Variables de entorno (configurar en Render Dashboard)
+# ============================================================
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
+SUPABASE_URL  = os.getenv("https://kixzeoduohupvyapbssd.supabase.co")      # ej: https://xxxx.supabase.co
+SUPABASE_KEY  = os.getenv("sb_publishable_V4AT_i4Hrd9W7h4bXkOWug_yh-ZnlfH") # la anon/public key
+
+
+# ============================================================
+# SUPABASE REST — Cliente minimalista con requests
+# (Evita instalar el SDK que tiene dependencias con errores de compilación)
+# ============================================================
+
+def supabase_headers() -> dict:
+    return {
+        "apikey":        SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type":  "application/json"
+    }
+
+def supabase_get(table: str, params: dict = None) -> list:
+    """SELECT a Supabase via REST."""
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    try:
+        r = requests.get(url, headers=supabase_headers(), params=params, timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        logger.error(f"Supabase GET {table}: {e}")
+        return []
+
+def supabase_post(table: str, data: dict) -> dict:
+    """INSERT a Supabase via REST."""
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    headers = {**supabase_headers(), "Prefer": "return=representation"}
+    try:
+        r = requests.post(url, headers=headers, json=data, timeout=10)
+        r.raise_for_status()
+        result = r.json()
+        return result[0] if isinstance(result, list) else result
+    except Exception as e:
+        logger.error(f"Supabase POST {table}: {e}")
+        raise
+
+
+# ============================================================
+# MODELOS
+# ============================================================
 
 class UserMessage(BaseModel):
     message: str
@@ -37,111 +83,148 @@ class ChatResponse(BaseModel):
     response: str
     recommended_places: List[dict]
 
-# --- CORRECCIÓN 2: CARGA DE DATOS ROBUSTA ---
-@lru_cache(maxsize=1)
-def cargar_places_db():
-    # Buscamos 'data/places.json' desde la raíz
-    json_path = os.path.join(BASE_DIR, 'data', 'places.json')
-    try:
-        if not os.path.exists(json_path):
-            logger.error(f"❌ NO ENCUENTRO EL ARCHIVO: {json_path}")
-            # Intento de respaldo por si la estructura es distinta
-            return []
-        
-        with open(json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            logger.info(f"✅ DB Cargada: {len(data)} lugares.")
-            return data
-    except Exception as e:
-        logger.error(f"❌ Error DB: {e}")
-        return []
+class NuevaResena(BaseModel):
+    negocio_id: str
+    texto: str = Field(..., max_length=300, min_length=5)
+    rating: int = Field(..., ge=1, le=5)
+    autor_alias: str = Field(default="Viajero Anonimo", max_length=50)
 
-def buscar_lugares_relevantes(query: str, places: List[dict]):
+
+# ============================================================
+# LOGICA DE BUSQUEDA Y RAG
+# ============================================================
+
+def buscar_lugares_relevantes(query: str):
+    places = supabase_get("negocios", params={"aprobado": "eq.true", "select": "*"})
+
     if not places:
-        return [], "AVISO: La base de datos está vacía. No puedo recomendar nada específico."
-    
-    query = query.lower()
-    keywords = query.split()
-    scored_places = []
-    
+        return [], "AVISO: La base de datos esta vacia."
+
+    query_lower = query.lower()
+    keywords = [w for w in query_lower.split() if len(w) > 3]
+    scored = []
+
     for place in places:
         score = 0
-        # Convertimos todo el lugar a texto para buscar
         full_text = str(place).lower()
-        
-        for word in keywords:
-            if len(word) > 3 and word in full_text:
+        for kw in keywords:
+            if kw in full_text:
                 score += 1
-                
         if score > 0:
-            scored_places.append((score, place))
-            
-    # Ordenamos por score
-    scored_places.sort(key=lambda x: x[0], reverse=True)
-    results = [p[1] for p in scored_places[:4]] # Top 4
-    
-    context = json.dumps(results, ensure_ascii=False) if results else "No encontré coincidencias exactas."
+            scored.append((score, place))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    results = [p[1] for p in scored[:4]]
+    context = json.dumps(results, ensure_ascii=False) if results else "No encontre coincidencias exactas."
     return results, context
 
-def llamar_gemini(prompt: str, api_key: str):
-    # Usamos el alias estable
+
+def obtener_resenas_recientes(negocio_id: str, limite: int = 5) -> list:
+    return supabase_get("resenas", params={
+        "negocio_id": f"eq.{negocio_id}",
+        "select":     "texto,rating,autor_alias,created_at",
+        "order":      "created_at.desc",
+        "limit":      limite
+    })
+
+
+# ============================================================
+# GEMINI
+# ============================================================
+
+def llamar_gemini(prompt: str, api_key: str) -> str:
+    #model = "gemini-flash-latest"
+    #url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     model = "gemini-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    
-    headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.7,
-            # --- CORRECCIÓN 3: MÁS ESPACIO PARA HABLAR ---
-            "maxOutputTokens": 800, 
-            "topP": 0.9
-        }
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 900, "topP": 0.9}
     }
-    
     try:
-        response = requests.post(url, headers=headers, json=payload, params={"key": api_key})
-        
-        if response.status_code != 200:
-            return f"Error IA ({response.status_code}): {response.text}"
-            
-        data = response.json()
-        return data['candidates'][0]['content']['parts'][0]['text']
+        r = requests.post(url, headers={"Content-Type": "application/json"},
+                          json=payload, params={"key": api_key}, timeout=20)
+        if r.status_code != 200:
+            return f"Error IA ({r.status_code}): {r.text}"
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
-        return f"Error de conexión: {str(e)}"
+        return f"Error de conexion con Gemini: {str(e)}"
+
+
+# ============================================================
+# ENDPOINTS
+# ============================================================
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(user_input: UserMessage):
-    places_db = cargar_places_db()
-    
-    # Búsqueda
-    relevant, context = buscar_lugares_relevantes(user_input.message, places_db)
-    
-    # Prompt
+
+    relevant, _ = buscar_lugares_relevantes(user_input.message)
+
+    # RAG Dinamico: enriquecer con resenas reales
+    contexto_enriquecido = []
+    for place in relevant[:3]:
+        resenas = obtener_resenas_recientes(place["id"], limite=5)
+        entry = dict(place)
+
+        if resenas:
+            promedio = sum(r["rating"] for r in resenas) / len(resenas)
+            textos = "\n".join(
+                f'  * "{r["texto"]}" - {r["autor_alias"]} ({r["rating"]} estrellas)'
+                for r in resenas
+            )
+            entry["_veredicto_comunidad"] = f"Promedio: {promedio:.1f} estrellas de {len(resenas)} resena(s).\n{textos}"
+        else:
+            entry["_veredicto_comunidad"] = "Sin resenas todavia."
+
+        contexto_enriquecido.append(entry)
+
     system_instruction = f"""
-    Eres 'Mayan Concierge', guía de Tenosique, Tabasco.
-    
-    INFORMACIÓN ENCONTRADA:
-    {context}
-    
-    INSTRUCCIONES:
-    1. Si hay lugares en la lista de arriba, recomiéndalos con entusiasmo.
-    2. Si la lista está vacía o dice "No encontré", sugiere visitar el Cañón del Usumacinta o el Centro.
-    3. Sé amable y usa emojis 🌴.
-    4. NO digas "según mis datos", actúa natural.
-    
-    Usuario: "{user_input.message}"
-    Respuesta:
-    """
+Eres 'Mayan Concierge', el guia turistico mas querido de Tenosique, Tabasco.
+Conoces cada rincon, eres calido, entusiasta y hablas con personalidad.
+
+LUGARES ENCONTRADOS (con datos reales y opiniones de turistas):
+{json.dumps(contexto_enriquecido, ensure_ascii=False, indent=2)}
+
+INSTRUCCIONES:
+1. Recomienda los lugares con entusiasmo y personalidad propia.
+2. Si el lugar tiene resenas en '_veredicto_comunidad', menciona UNA o DOS opiniones 
+   de forma natural. Ejemplo: "Los turistas destacan su salsa verde, aunque varios 
+   mencionaron que cierran temprano."
+3. Si no hay resenas, recomienda igual usando el 'tip_secreto' y el 'vibe'.
+4. Si no hay lugares relevantes, sugiere el Canon del Usumacinta o el Centro.
+5. Usa emojis, se conciso (max 3 parrafos). NUNCA digas "segun mis datos".
+
+Pregunta del turista: "{user_input.message}"
+Respuesta:
+"""
 
     ai_text = llamar_gemini(system_instruction, GENAI_API_KEY)
+    return ChatResponse(response=ai_text, recommended_places=relevant)
 
-    return ChatResponse(
-        response=ai_text,
-        recommended_places=relevant
-    )
+
+@app.post("/api/resenas")
+async def guardar_resena(resena: NuevaResena):
+    check = supabase_get("negocios", params={
+        "id":       f"eq.{resena.negocio_id}",
+        "aprobado": "eq.true",
+        "select":   "id"
+    })
+    if not check:
+        raise HTTPException(status_code=404, detail="Negocio no encontrado")
+
+    try:
+        result = supabase_post("resenas", {
+            "negocio_id":  resena.negocio_id,
+            "texto":       resena.texto,
+            "rating":      resena.rating,
+            "autor_alias": resena.autor_alias
+        })
+        return {"success": True, "id": result.get("id")}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error al guardar la resena")
+
 
 @app.get("/")
 def health_check():
-    db = cargar_places_db()
-    return {"status": "Online", "lugares_en_db": len(db)}
+    places = supabase_get("negocios", params={"aprobado": "eq.true", "select": "id"})
+    return {"status": "Online", "version": "2.0", "negocios_activos": len(places)}
