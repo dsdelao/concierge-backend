@@ -30,8 +30,8 @@ app.add_middleware(
 # Variables de entorno (configurar en Render Dashboard)
 # ============================================================
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
-SUPABASE_URL  = os.getenv("https://kixzeoduohupvyapbssd.supabase.co")      # ej: https://xxxx.supabase.co
-SUPABASE_KEY  = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpeHplb2R1b2h1cHZ5YXBic3NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNDM1MjgsImV4cCI6MjA4NzkxOTUyOH0.FRKTo3Jx-B9aqE5AjI13SR67uEuR2Ih9DGNbVvBgyKA") # la anon/public key
+# Leidas dentro de las funciones para garantizar que esten disponibles      # ej: https://xxxx.supabase.co
+# SUPABASE_KEY  = os.getenv("SUPABASE_ANON_KEY") # la anon/public key
 
 
 # ============================================================
@@ -40,15 +40,18 @@ SUPABASE_KEY  = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 # ============================================================
 
 def supabase_headers() -> dict:
+    # Leer EN CADA LLAMADA para garantizar que las variables ya esten cargadas
+    key = os.getenv("SUPABASE_ANON_KEY")
     return {
-        "apikey":        SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey":        key,
+        "Authorization": f"Bearer {key}",
         "Content-Type":  "application/json"
     }
 
 def supabase_get(table: str, params: dict = None) -> list:
     """SELECT a Supabase via REST."""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    base_url = os.getenv("SUPABASE_URL")
+    url = f"{base_url}/rest/v1/{table}"
     try:
         r = requests.get(url, headers=supabase_headers(), params=params, timeout=10)
         r.raise_for_status()
@@ -59,7 +62,8 @@ def supabase_get(table: str, params: dict = None) -> list:
 
 def supabase_post(table: str, data: dict) -> dict:
     """INSERT a Supabase via REST."""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    base_url = os.getenv("SUPABASE_URL")
+    url = f"{base_url}/rest/v1/{table}"
     headers = {**supabase_headers(), "Prefer": "return=representation"}
     try:
         r = requests.post(url, headers=headers, json=data, timeout=10)
